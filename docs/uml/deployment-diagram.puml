@@ -1,0 +1,80 @@
+@startuml
+!theme plain
+
+node "Docker Host" as Docker {
+
+    node "Frontend Container" as Frontend {
+        [React App] as React
+        [Vite Server] as Vite
+    }
+
+    node "API Gateway Container" as Gateway {
+        [Apollo Gateway] as ApolloGW
+    }
+
+    node "Auth Service Container" as AuthSvc {
+        [Node.js/Express] as AuthNode
+        [Apollo Server] as AuthApollo
+    }
+
+    node "Vehicle Service Container" as VehicleSvc {
+        [Node.js/Express] as VehicleNode
+        [Apollo Server] as VehicleApollo
+    }
+
+    node "Traffic Service Container" as TrafficSvc {
+        [Node.js/Express] as TrafficNode
+        [Apollo Server] as TrafficApollo
+    }
+
+    node "Incident Service Container" as IncidentSvc {
+        [Node.js/Express] as IncidentNode
+        [Apollo Server] as IncidentApollo
+    }
+
+    node "Notification Service Container" as NotifSvc {
+        [Node.js/Express] as NotifNode
+        [Apollo Server] as NotifApollo
+        [WebSocket Server] as WSServer
+    }
+
+    node "Database Containers" as Databases {
+        database "MySQL
+Auth DB :3306" as AuthDB
+        database "MySQL
+Vehicle DB :3307" as VehicleDB
+        database "MySQL
+Traffic DB :3308" as TrafficDB
+        database "MySQL
+Incident DB :3309" as IncidentDB
+        database "MySQL
+Notification DB :3310" as NotifDB
+        database "Redis
+Cache :6379" as Redis
+    }
+}
+
+' Connections
+React --> ApolloGW : HTTP :4000
+ApolloGW --> AuthApollo : HTTP :4001
+ApolloGW --> VehicleApollo : HTTP :4002
+ApolloGW --> TrafficApollo : HTTP :4003
+ApolloGW --> IncidentApollo : HTTP :4004
+ApolloGW --> NotifApollo : HTTP :4005
+
+AuthNode --> AuthDB : Sequelize ORM
+VehicleNode --> VehicleDB : Sequelize ORM
+TrafficNode --> TrafficDB : Sequelize ORM
+IncidentNode --> IncidentDB : Sequelize ORM
+NotifNode --> NotifDB : Sequelize ORM
+NotifNode --> Redis : Cache
+
+' Internal connections
+AuthApollo --> AuthNode
+VehicleApollo --> VehicleNode
+TrafficApollo --> TrafficNode
+IncidentApollo --> IncidentNode
+NotifApollo --> NotifNode
+WSServer --> NotifNode
+
+@enduml

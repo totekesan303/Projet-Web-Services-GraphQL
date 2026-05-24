@@ -1,0 +1,146 @@
+@startuml
+!theme plain
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 12
+
+package "Auth Service" {
+  class User {
+    +id: UUID
+    +email: String
+    +password: String
+    +firstName: String
+    +lastName: String
+    +role: UserRole
+    +isActive: Boolean
+    +createdAt: DateTime
+    +updatedAt: DateTime
+    +fullName(): String
+  }
+
+  enum UserRole {
+    ADMIN
+    OPERATOR
+  }
+}
+
+package "Vehicle Service" {
+  class Vehicle {
+    +id: UUID
+    +plateNumber: String
+    +brand: String
+    +model: String
+    +type: VehicleType
+    +year: Integer
+    +color: String
+    +ownerName: String
+    +ownerPhone: String
+    +isActive: Boolean
+  }
+
+  class Position {
+    +id: UUID
+    +vehicleId: UUID
+    +latitude: Decimal
+    +longitude: Decimal
+    +speed: Decimal
+    +heading: Decimal
+    +timestamp: DateTime
+  }
+
+  enum VehicleType {
+    CAR
+    TRUCK
+    MOTORCYCLE
+    BUS
+    EMERGENCY
+  }
+}
+
+package "Traffic Service" {
+  class Zone {
+    +id: UUID
+    +name: String
+    +description: String
+    +coordinates: JSON
+    +centerLat: Decimal
+    +centerLng: Decimal
+    +density: TrafficDensity
+    +vehicleCount: Integer
+    +averageSpeed: Decimal
+    +isActive: Boolean
+  }
+
+  enum TrafficDensity {
+    FAIBLE
+    MOYEN
+    ELEVE
+  }
+}
+
+package "Incident Service" {
+  class Incident {
+    +id: UUID
+    +type: IncidentType
+    +status: IncidentStatus
+    +title: String
+    +description: String
+    +latitude: Decimal
+    +longitude: Decimal
+    +address: String
+    +reportedBy: UUID
+    +reportedByName: String
+    +resolvedAt: DateTime
+    +resolvedBy: UUID
+    +severity: Severity
+  }
+
+  enum IncidentType {
+    ACCIDENT
+    TRAVAUX
+    ROUTE_FERMEE
+    EMBOUTEILLAGE
+  }
+
+  enum IncidentStatus {
+    SIGNALE
+    EN_COURS
+    RESOLU
+  }
+
+  enum Severity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+  }
+}
+
+package "Notification Service" {
+  class Notification {
+    +id: UUID
+    +title: String
+    +message: String
+    +type: NotificationType
+    +userId: UUID
+    +isRead: Boolean
+    +readAt: DateTime
+    +data: JSON
+  }
+
+  enum NotificationType {
+    INCIDENT
+    STATUS_UPDATE
+    TRAFFIC_ALERT
+    SYSTEM
+    GENERAL
+  }
+}
+
+' Relations
+Vehicle "1" --> "*" Position : has
+User "1" --> "*" Incident : reports
+User "1" --> "*" Notification : receives
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+!theme plain
+
+actor "Client" as Client
+participant "Gateway
+:4000" as Gateway
+participant "Auth Service
+:4001" as Auth
+participant "MySQL
+:3306" as DB
+
+== Inscription ==
+Client -> Gateway : register(input)
+Gateway -> Auth : mutation register
+Auth -> Auth : validate input
+Auth -> DB : INSERT INTO users
+DB --> Auth : user created
+Auth -> Auth : generate JWT
+Auth --> Gateway : { token, user }
+Gateway --> Client : AuthPayload
+
+== Connexion ==
+Client -> Gateway : login(input)
+Gateway -> Auth : mutation login
+Auth -> DB : SELECT * FROM users WHERE email
+DB --> Auth : user data
+Auth -> Auth : bcrypt.compare(password)
+Auth -> Auth : generate JWT
+Auth --> Gateway : { token, user }
+Gateway --> Client : AuthPayload
+
+== Requête authentifiée ==
+Client -> Gateway : query me
+note right: Header: Bearer <token>
+Gateway -> Auth : verify token
+Auth -> Auth : jwt.verify()
+Auth -> DB : SELECT * FROM users WHERE id
+DB --> Auth : user data
+Auth --> Gateway : User
+Gateway --> Client : User
+
+@enduml

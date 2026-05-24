@@ -1,0 +1,46 @@
+@startuml
+!theme plain
+
+actor "Operateur" as Op
+participant "Frontend
+:3000" as Frontend
+participant "Gateway
+:4000" as Gateway
+participant "Incident
+Service :4004" as Incident
+participant "Auth
+Service :4001" as Auth
+participant "Notification
+Service :4005" as Notif
+participant "MySQL
+:3309" as DB
+
+== Declarer un incident ==
+Op -> Frontend : Remplir formulaire
+Frontend -> Gateway : declareIncident(input)
+Gateway -> Incident : mutation
+Incident -> Auth : verify token (me query)
+Auth --> Incident : user data
+Incident -> DB : INSERT INTO incidents
+DB --> Incident : incident created
+Incident -> Notif : sendNotification
+Notif --> Incident : notification sent
+Incident --> Gateway : Incident
+Gateway --> Frontend : Incident
+Frontend --> Op : Confirmation
+
+== Mettre a jour statut ==
+Op -> Frontend : Changer statut
+Frontend -> Gateway : updateIncidentStatus(id, status)
+Gateway -> Incident : mutation
+Incident -> Auth : verify token
+Auth --> Incident : user data
+Incident -> DB : UPDATE incidents SET status
+DB --> Incident : updated
+Incident -> Notif : sendNotification (status update)
+Notif --> Incident : sent
+Incident --> Gateway : Incident
+Gateway --> Frontend : Incident
+Frontend --> Op : Statut mis a jour
+
+@enduml
