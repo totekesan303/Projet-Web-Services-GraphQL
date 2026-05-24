@@ -1,0 +1,442 @@
+{
+  "info": {
+    "_postman_id": "smart-traffic-2024",
+    "name": "Smart Traffic GraphQL API",
+    "description": "Collection complete pour tester l'API GraphQL Smart Traffic",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { login(input: {email: \"admin@smarttraffic.tn\", password: \"admin123\"}) { token user { id email fullName role } } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { register(input: {email: \"test@test.com\", password: \"password123\", firstName: \"Test\", lastName: \"User\", role: OPERATOR}) { token user { id email } } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Me (Current User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { me { id email fullName role } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Get All Users (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { users { id email fullName role isActive } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Vehicles",
+      "item": [
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { vehicles { id plateNumber brand model type ownerName isActive lastPosition { latitude longitude } } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { createVehicle(input: {plateNumber: \"123 TN 4567\", brand: \"Toyota\", model: \"Corolla\", type: CAR, year: 2023, color: \"Blanc\", ownerName: \"Ahmed Ben Ali\", ownerPhone: \"+216 20 123 456\"}) { id plateNumber brand model } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Record Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { recordPosition(input: {vehicleId: \"{{vehicle_id}}\", latitude: 36.8065, longitude: 10.1815, speed: 45.5, heading: 90.0}) { id latitude longitude timestamp } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Simulate Positions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { simulatePositions(vehicleId: \"{{vehicle_id}}\", count: 10) { id latitude longitude speed } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Vehicle History",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { vehicleHistory(vehicleId: \"{{vehicle_id}}\", limit: 50) { id latitude longitude speed timestamp } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Traffic",
+      "item": [
+        {
+          "name": "Get All Zones",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { zones { id name density vehicleCount averageSpeed centerLat centerLng } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Create Zone",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { createZone(input: {name: \"Centre-ville\", description: \"Zone centrale\", coordinates: [{lat: 36.81, lng: 10.18}, {lat: 36.81, lng: 10.19}, {lat: 36.80, lng: 10.19}, {lat: 36.80, lng: 10.18}], centerLat: 36.805, centerLng: 10.185}) { id name density } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Traffic Summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { trafficSummary { totalZones congestedZones averageDensity zonesByDensity { faible moyen eleve } } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Congested Zones",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { congestedZones { id name vehicleCount averageSpeed density } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Calculate All Densities",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { calculateAllDensities { id name density vehicleCount averageSpeed } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Incidents",
+      "item": [
+        {
+          "name": "Get All Incidents",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { incidents { id type status title description latitude longitude address severity createdAt } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Declare Incident",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { declareIncident(input: {type: ACCIDENT, title: \"Accident autoroute\", description: \"Collision\", latitude: 36.85, longitude: 10.25, address: \"A1 km 15\", severity: HIGH}) { id title status type createdAt } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Update Incident Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { updateIncidentStatus(id: \"{{incident_id}}\", input: {status: EN_COURS}) { id status updatedAt } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Active Incidents",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { activeIncidents { id title type status severity latitude longitude } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Incident Stats",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { incidentStats { total criticalCount byStatus { signale enCours resolu } byType { accident travaux routeFermee embouteillage } } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Notifications",
+      "item": [
+        {
+          "name": "My Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { myNotifications { id title message type isRead readAt createdAt } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Unread Count",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { unreadCount }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { markAsRead(input: {notificationId: \"{{notification_id}}\"}) { id isRead readAt } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation { markAllAsRead { id } }"
+              }
+            },
+            "url": "{{gateway_url}}/graphql"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "vehicle_id",
+      "value": ""
+    },
+    {
+      "key": "incident_id",
+      "value": ""
+    },
+    {
+      "key": "notification_id",
+      "value": ""
+    }
+  ]
+}
