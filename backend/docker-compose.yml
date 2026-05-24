@@ -1,0 +1,306 @@
+services:
+  # ==================== DATABASES ====================
+  auth-db:
+    image: mysql:8.0
+    container_name: auth-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: auth_db
+      MYSQL_USER: auth_user
+      MYSQL_PASSWORD: auth_pass
+    ports:
+      - "13306:3306"
+    volumes:
+      - auth_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vehicle-db:
+    image: mysql:8.0
+    container_name: vehicle-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: vehicle_db
+      MYSQL_USER: vehicle_user
+      MYSQL_PASSWORD: vehicle_pass
+    ports:
+      - "13307:3306"
+    volumes:
+      - vehicle_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  traffic-db:
+    image: mysql:8.0
+    container_name: traffic-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: traffic_db
+      MYSQL_USER: traffic_user
+      MYSQL_PASSWORD: traffic_pass
+    ports:
+      - "13308:3306"
+    volumes:
+      - traffic_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  incident-db:
+    image: mysql:8.0
+    container_name: incident-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: incident_db
+      MYSQL_USER: incident_user
+      MYSQL_PASSWORD: incident_pass
+    ports:
+      - "13309:3306"
+    volumes:
+      - incident_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notification-db:
+    image: mysql:8.0
+    container_name: notification-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: notification_db
+      MYSQL_USER: notification_user
+      MYSQL_PASSWORD: notification_pass
+    ports:
+      - "13310:3306"
+    volumes:
+      - notification_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== SERVICES NODE.JS (sans build) ====================
+  auth-service:
+    image: node:20-alpine
+    container_name: auth-service
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ENV=development
+      - PORT=4001
+      - DB_HOST=auth-db
+      - DB_PORT=3306
+      - DB_NAME=auth_db
+      - DB_USER=auth_user
+      - DB_PASS=auth_pass
+      - JWT_SECRET=super_secret_key_smart_traffic_2024
+      - JWT_EXPIRES_IN=24h
+    volumes:
+      - ./services/auth-service:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+  vehicle-service:
+    image: node:20-alpine
+    container_name: vehicle-service
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    ports:
+      - "4002:4002"
+    environment:
+      - NODE_ENV=development
+      - PORT=4002
+      - DB_HOST=vehicle-db
+      - DB_PORT=3306
+      - DB_NAME=vehicle_db
+      - DB_USER=vehicle_user
+      - DB_PASS=vehicle_pass
+      - JWT_SECRET=super_secret_key_smart_traffic_2024
+      - AUTH_SERVICE_URL=http://auth-service:4001
+    volumes:
+      - ./services/vehicle-service:/app
+      - /app/node_modules
+    depends_on:
+      vehicle-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4002/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+
+  traffic-service:
+    image: node:20-alpine
+    container_name: traffic-service
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    ports:
+      - "4003:4003"
+    environment:
+      - NODE_ENV=development
+      - PORT=4003
+      - DB_HOST=traffic-db
+      - DB_PORT=3306
+      - DB_NAME=traffic_db
+      - DB_USER=traffic_user
+      - DB_PASS=traffic_pass
+      - JWT_SECRET=super_secret_key_smart_traffic_2024
+      - AUTH_SERVICE_URL=http://auth-service:4001
+    volumes:
+      - ./services/traffic-service:/app
+      - /app/node_modules
+    depends_on:
+      traffic-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4003/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+
+  incident-service:
+    image: node:20-alpine
+    container_name: incident-service
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    ports:
+      - "4004:4004"
+    environment:
+      - NODE_ENV=development
+      - PORT=4004
+      - DB_HOST=incident-db
+      - DB_PORT=3306
+      - DB_NAME=incident_db
+      - DB_USER=incident_user
+      - DB_PASS=incident_pass
+      - JWT_SECRET=super_secret_key_smart_traffic_2024
+      - AUTH_SERVICE_URL=http://auth-service:4001
+      - NOTIFICATION_SERVICE_URL=http://notification-service:4005
+    volumes:
+      - ./services/incident-service:/app
+      - /app/node_modules
+    depends_on:
+      incident-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4004/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+
+  notification-service:
+    image: node:20-alpine
+    container_name: notification-service
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    ports:
+      - "4005:4005"
+    environment:
+      - NODE_ENV=development
+      - PORT=4005
+      - DB_HOST=notification-db
+      - DB_PORT=3306
+      - DB_NAME=notification_db
+      - DB_USER=notification_user
+      - DB_PASS=notification_pass
+      - JWT_SECRET=super_secret_key_smart_traffic_2024
+      - AUTH_SERVICE_URL=http://auth-service:4001
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./services/notification-service:/app
+      - /app/node_modules
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4005/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+
+  gateway:
+    image: node:20-alpine
+    container_name: api-gateway
+    restart: always
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - AUTH_SERVICE_URL=http://auth-service:4001/graphql
+      - VEHICLE_SERVICE_URL=http://vehicle-service:4002/graphql
+      - TRAFFIC_SERVICE_URL=http://traffic-service:4003/graphql
+      - INCIDENT_SERVICE_URL=http://incident-service:4004/graphql
+      - NOTIFICATION_SERVICE_URL=http://notification-service:4005/graphql
+      - JWT_SECRET=super_secret_key_smart_traffic_2024
+    volumes:
+      - ./gateway:/app
+      - /app/node_modules
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      vehicle-service:
+        condition: service_healthy
+      traffic-service:
+        condition: service_healthy
+      incident-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+
+volumes:
+  auth_db_data:
+  vehicle_db_data:
+  traffic_db_data:
+  incident_db_data:
+  notification_db_data:
